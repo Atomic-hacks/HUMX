@@ -6,7 +6,7 @@ export default function RoomTypeCard({ room, className = "", compact = false }) 
   return (
     <Link
       to={`/rooms/${room.id}`}
-      className={`group relative block overflow-hidden rounded-[8px] ${className}`}
+      className={`group relative block overflow-hidden rounded-[var(--ui-radius-md)] border border-[var(--sage-border)]/45 shadow-[var(--ui-shadow-soft)] ${className}`}
       style={{ height: compact ? 420 : 500 }}
     >
       <img
@@ -18,7 +18,7 @@ export default function RoomTypeCard({ room, className = "", compact = false }) 
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/38 to-transparent opacity-95" />
 
       <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-[#d6c6a8]">{room.category}</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--sage-accent)]">{room.category}</p>
         <h3
           className="mt-1 text-white"
           style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(30px,4.2vw,36px)", fontWeight: 400, lineHeight: 1 }}

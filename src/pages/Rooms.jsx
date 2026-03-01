@@ -1,121 +1,62 @@
 import React, { useEffect } from "react";
-import { Link } from "react-router-dom";
 import RoomTypeCard from "../components/rooms/RoomTypeCard";
-import HotelNavbar from "../components/site/HotelNavbar";
 import HotelFooter from "../components/site/HotelFooter";
+import PageHero from "../components/sections/PageHero";
+import Container from "../components/ui/Container";
+import Section from "../components/ui/Section";
+import SectionHeader from "../components/ui/SectionHeader";
+import { ButtonLink } from "../components/ui/Button";
 import { rooms } from "../data/rooms";
+import { animateStaggerGrid, gsap } from "../../lib/animations/gsap";
 
-const CREAM = "#F5EFE6";
-
-function loadGSAP() {
-  return new Promise((resolve) => {
-    if (window.gsap) return resolve(window.gsap);
-    const s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js";
-    s.onload = () => {
-      const s2 = document.createElement("script");
-      s2.src =
-        "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js";
-      s2.onload = () => {
-        window.gsap.registerPlugin(window.ScrollTrigger);
-        resolve(window.gsap);
-      };
-      document.head.appendChild(s2);
-    };
-    document.head.appendChild(s);
-  });
-}
+const CREAM = "var(--sage-bg)";
 
 export default function RoomsPage() {
   useEffect(() => {
-    loadGSAP().then((gsap) => {
+    const ctx = gsap.context(() => {
       gsap.fromTo(
         ".rooms-banner-title",
         { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1.1, ease: "power3.out", delay: 0.3 },
+        { y: 0, opacity: 1, duration: 0.9, ease: "power3.out", delay: 0.22 },
       );
-
-      gsap.utils.toArray(".room-card-reveal").forEach((el, i) => {
-        gsap.fromTo(
-          el,
-          { y: 42, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.8,
-            delay: i * 0.08,
-            ease: "power3.out",
-            scrollTrigger: { trigger: el, start: "top 88%" },
-          },
-        );
-      });
+      const grid = document.querySelector("[data-rooms-grid]");
+      if (grid) animateStaggerGrid(grid);
     });
+    return () => ctx.revert();
   }, []);
 
   return (
-    <div style={{ fontFamily: "'Jost', sans-serif", background: CREAM }}>
-      <section
-        className="fixed left-0 right-0 top-0 z-0 overflow-hidden"
-        style={{ height: 360 }}
-      >
-        <img
-          src="https://images.unsplash.com/photo-1563911302283-d2bc129e7570?w=1920&q=80"
-          alt="HUMX rooms"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/60" />
-        <HotelNavbar tone="light" />
-        <div className="absolute bottom-8 left-4 sm:left-6 lg:left-12">
-          <h1
-            className="rooms-banner-title text-white"
-            style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "clamp(40px,5vw,62px)",
-              fontWeight: 300,
-            }}
-          >
-            HUMX Room Types
-          </h1>
-          <p className="mt-2 text-sm text-white/85">
-            Regular, Deluxe, Suite, Presidential
-          </p>
-        </div>
-      </section>
+    <div style={{ background: CREAM }}>
+      <PageHero
+        image="https://images.unsplash.com/photo-1563911302283-d2bc129e7570?w=1920&q=80"
+        alt="HUMX rooms"
+        title={<span className="rooms-banner-title">HUMX Room Types</span>}
+        subtitle="Regular, Deluxe, Suite, Presidential"
+      />
 
       <main className="relative z-20 mt-[360px]" style={{ background: CREAM }}>
-        <section className="px-4 py-12 sm:px-6 lg:px-12 lg:py-16">
-          <div className="mb-8 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
-            <h2
-              style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "clamp(36px,4.8vw,44px)",
-                fontWeight: 400,
-                color: "#1a1208",
-              }}
-            >
-              Available Rooms
-            </h2>
-            <Link
-              to="/booking/view"
-              className="rounded-full border px-7 py-2.5 text-sm"
-              style={{ borderColor: "#C9A96E", color: "#8B6914" }}
-            >
-              View My Bookings
-            </Link>
-          </div>
+        <Section>
+          <Container>
+            <SectionHeader
+              title="Available Rooms"
+              action={
+                <ButtonLink to="/booking/view" variant="secondary">
+                  View My Bookings
+                </ButtonLink>
+              }
+            />
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            {rooms.map((room) => (
-              <div key={room.id} className="room-card-reveal">
-                <RoomTypeCard room={room} />
-              </div>
-            ))}
-          </div>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2" data-rooms-grid>
+              {rooms.map((room) => (
+                <RoomTypeCard key={room.id} room={room} className="ui-stagger-item" />
+              ))}
+            </div>
 
-          <p className="mt-8 text-sm" style={{ color: "#6b5a45" }}>
-            Click any room to view full details and book that exact room type.
-          </p>
-        </section>
+            <p className="mt-8 text-sm text-[var(--sage-muted)]/90">
+              Click any room to view full details and book that exact room type.
+            </p>
+          </Container>
+        </Section>
 
         <HotelFooter />
       </main>

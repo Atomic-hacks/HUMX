@@ -1,30 +1,18 @@
 import React, { useEffect } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
-import HotelNavbar from "../components/site/HotelNavbar";
 import HotelFooter from "../components/site/HotelFooter";
+import PageHero from "../components/sections/PageHero";
+import Card from "../components/ui/Card";
+import Container from "../components/ui/Container";
+import Divider from "../components/ui/Divider";
+import Input from "../components/ui/Input";
+import Section from "../components/ui/Section";
 import { formatNaira, rooms } from "../data/rooms";
 import { useBooking } from "../context/BookingContext";
+import { animateSectionReveal, gsap } from "../../lib/animations/gsap";
 
-const GOLD = "#C9A96E";
-const CREAM = "#F5EFE6";
-
-function loadGSAP() {
-  return new Promise((resolve) => {
-    if (window.gsap) return resolve(window.gsap);
-    const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js";
-    script.onload = () => {
-      const trigger = document.createElement("script");
-      trigger.src = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js";
-      trigger.onload = () => {
-        window.gsap.registerPlugin(window.ScrollTrigger);
-        resolve(window.gsap);
-      };
-      document.head.appendChild(trigger);
-    };
-    document.head.appendChild(script);
-  });
-}
+const GOLD = "var(--sage-accent)";
+const CREAM = "var(--sage-bg)";
 
 export default function RoomDetailsPage() {
   const { roomId } = useParams();
@@ -33,29 +21,19 @@ export default function RoomDetailsPage() {
   const { form, updateField, summary, submitBooking } = useBooking();
 
   useEffect(() => {
-    if (room) {
-      updateField("roomId", room.id);
-    }
+    if (room) updateField("roomId", room.id);
   }, [room, updateField]);
 
   useEffect(() => {
-    loadGSAP().then((gsap) => {
-      gsap.fromTo(".detail-title", { y: 34, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: "power3.out" });
-
-      gsap.utils.toArray(".detail-reveal").forEach((el) => {
-        gsap.fromTo(
-          el,
-          { y: 42, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.85,
-            ease: "power3.out",
-            scrollTrigger: { trigger: el, start: "top 85%" },
-          },
-        );
-      });
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        ".detail-title",
+        { y: 34, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.9, ease: "power3.out" },
+      );
+      gsap.utils.toArray("[data-detail-reveal]").forEach((el) => animateSectionReveal(el));
     });
+    return () => ctx.revert();
   }, []);
 
   if (!room) return <Navigate to="/rooms" replace />;
@@ -67,117 +45,128 @@ export default function RoomDetailsPage() {
   };
 
   return (
-    <div style={{ fontFamily: "'Jost', sans-serif" }}>
-      <section className="fixed left-0 right-0 top-0 z-0 overflow-hidden" style={{ height: 360 }}>
-        <img src={room.bannerImg} alt={room.name} className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/60" />
-        <HotelNavbar tone="light" />
-        <div className="absolute bottom-8 left-4 sm:left-6 lg:left-12">
-          <p className="text-xs uppercase tracking-wider text-white/80">{room.category}</p>
-          <h1 className="detail-title text-white" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(38px,5vw,60px)", fontWeight: 300 }}>
-            {room.name}
-          </h1>
-        </div>
-      </section>
+    <div>
+      <PageHero image={room.bannerImg} alt={room.name} title={<span className="detail-title">{room.name}</span>} />
 
       <main className="relative z-20 mt-[360px]">
-        <section className="bg-white" style={{ minHeight: 480 }}>
-          <div className="grid lg:grid-cols-2">
-            <div className="detail-reveal border-b border-[#f0ebe2] px-4 py-12 sm:px-6 lg:border-b-0 lg:border-r lg:px-12 lg:py-16">
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(34px,4.8vw,44px)", fontWeight: 400, color: "#1a1208" }}>Room Details</h2>
+        <Section className="bg-[var(--sage-surface)] !py-0">
+          <Container className="grid lg:grid-cols-2">
+            <div className="border-b border-[var(--sage-border)] py-12 lg:border-b-0 lg:border-r lg:py-16" data-detail-reveal>
+              <p className="text-xs uppercase tracking-wide text-[var(--sage-kicker)]">{room.category}</p>
+              <h2 className="mt-3 text-[clamp(34px,4.8vw,44px)] text-[var(--sage-text)]">Room Details</h2>
 
               <div className="mt-8 flex flex-wrap gap-8 sm:gap-12">
                 <div>
-                  <p className="text-xs uppercase tracking-wide" style={{ color: "#a89070" }}>Size</p>
-                  <p className="mt-1 text-base" style={{ color: "#1a1208" }}>{room.size}</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--sage-kicker)]">Size</p>
+                  <p className="mt-1 text-base text-[var(--sage-text)]">{room.size}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wide" style={{ color: "#a89070" }}>Capacity</p>
-                  <p className="mt-1 text-base" style={{ color: "#1a1208" }}>{room.guests}</p>
+                  <p className="text-xs uppercase tracking-wide text-[var(--sage-kicker)]">Capacity</p>
+                  <p className="mt-1 text-base text-[var(--sage-text)]">{room.guests}</p>
                 </div>
               </div>
 
-              <div className="my-8 border-t border-[#e8e0d4]" />
+              <Divider className="my-8" />
 
-              <p className="max-w-xl text-sm leading-relaxed" style={{ color: "#4a3a28", fontWeight: 300 }}>{room.longDescription}</p>
+              <p className="max-w-xl text-sm leading-relaxed text-[var(--sage-muted)]/90">{room.longDescription}</p>
 
-              <p className="mt-8 text-xs uppercase tracking-wide" style={{ color: "#a89070" }}>Starting at</p>
-              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px,5vw,44px)", fontWeight: 400, color: "#1a1208", lineHeight: 1 }}>
+              <p className="mt-8 text-xs uppercase tracking-wide text-[var(--sage-kicker)]">Starting at</p>
+              <p className="text-[clamp(36px,5vw,44px)] leading-none text-[var(--sage-text)]">
                 {formatNaira(room.price)}
               </p>
-              <p className="text-sm" style={{ color: "#a89070", fontWeight: 300 }}>/ night</p>
+              <p className="text-sm text-[var(--sage-kicker)]">/ night</p>
 
-              <a href="#detail-booking" className="mt-8 inline-block rounded-full px-8 py-3 text-sm transition-all hover:opacity-90" style={{ background: GOLD, color: "#2a1f10", letterSpacing: "0.04em" }}>
+              <a
+                href="#detail-booking"
+                className="mt-8 inline-flex rounded-[var(--ui-radius-pill)] border border-[var(--sage-accent)] bg-[var(--sage-accent)] px-8 py-3 text-sm text-[var(--sage-text)] transition-colors hover:border-[var(--sage-accent-dark)] hover:bg-[var(--sage-accent-dark)] hover:text-white"
+              >
                 Book This Room
               </a>
             </div>
 
-            <div className="detail-reveal h-[300px] sm:h-[380px] lg:h-auto">
+            <div className="h-[300px] py-0 sm:h-[380px] lg:h-auto" data-detail-reveal>
               <img src={room.detailImg} alt={room.name} className="h-full w-full object-cover" />
             </div>
-          </div>
-        </section>
+          </Container>
+        </Section>
 
-        <section id="detail-booking" style={{ background: CREAM }} className="px-4 py-12 sm:px-6 lg:px-12 lg:py-16">
-          <form onSubmit={handleSubmit} className="detail-reveal grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8">
-            <div className="rounded-[8px] bg-white px-5 py-6 shadow-[0_20px_50px_rgba(0,0,0,0.08)] sm:px-8 sm:py-8">
-              <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(30px,4.4vw,36px)", color: "#1a1208" }}>Complete Reservation</h3>
+        <Section id="detail-booking" className="bg-[var(--sage-bg)]">
+          <Container>
+            <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8">
+              <Card data-detail-reveal>
+                <h3 className="text-[clamp(30px,4.4vw,36px)] text-[var(--sage-text)]">Complete Reservation</h3>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <label className="text-sm" style={{ color: "#4a3a28" }}>
-                  Full Name
-                  <input required value={form.name} onChange={(e) => updateField("name", e.target.value)} className="mt-2 w-full rounded-[6px] border px-4 py-3 text-sm outline-none" style={{ borderColor: "#e8e0d4" }} />
-                </label>
-                <label className="text-sm" style={{ color: "#4a3a28" }}>
-                  Email
-                  <input type="email" required value={form.email} onChange={(e) => updateField("email", e.target.value)} className="mt-2 w-full rounded-[6px] border px-4 py-3 text-sm outline-none" style={{ borderColor: "#e8e0d4" }} />
-                </label>
-                <label className="text-sm" style={{ color: "#4a3a28" }}>
-                  Check-in
-                  <input type="date" required value={form.checkIn} onChange={(e) => updateField("checkIn", e.target.value)} className="mt-2 w-full rounded-[6px] border px-4 py-3 text-sm outline-none" style={{ borderColor: "#e8e0d4" }} />
-                </label>
-                <label className="text-sm" style={{ color: "#4a3a28" }}>
-                  Check-out
-                  <input type="date" required value={form.checkOut} onChange={(e) => updateField("checkOut", e.target.value)} className="mt-2 w-full rounded-[6px] border px-4 py-3 text-sm outline-none" style={{ borderColor: "#e8e0d4" }} />
-                </label>
-                <label className="text-sm" style={{ color: "#4a3a28" }}>
-                  Guests
-                  <select value={form.guests} onChange={(e) => updateField("guests", Number(e.target.value))} className="mt-2 w-full rounded-[6px] border px-4 py-3 text-sm outline-none" style={{ borderColor: "#e8e0d4" }}>
-                    {[1, 2, 3, 4, 5, 6].map((count) => (
-                      <option key={count} value={count}>{count}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="text-sm" style={{ color: "#4a3a28" }}>
-                  Room Type
-                  <input disabled value={room.name} className="mt-2 w-full rounded-[6px] border bg-[#f8f2e8] px-4 py-3 text-sm outline-none" style={{ borderColor: "#e8e0d4" }} />
-                </label>
-              </div>
-            </div>
+                <div className="mt-6 grid gap-4 md:grid-cols-2 text-sm text-[var(--sage-muted)]">
+                  <label>
+                    Full Name
+                    <Input required value={form.name} onChange={(e) => updateField("name", e.target.value)} />
+                  </label>
+                  <label>
+                    Email
+                    <Input type="email" required value={form.email} onChange={(e) => updateField("email", e.target.value)} />
+                  </label>
+                  <label>
+                    Check-in
+                    <Input type="date" required value={form.checkIn} onChange={(e) => updateField("checkIn", e.target.value)} />
+                  </label>
+                  <label>
+                    Check-out
+                    <Input type="date" required value={form.checkOut} onChange={(e) => updateField("checkOut", e.target.value)} />
+                  </label>
+                  <label>
+                    Guests
+                    <select
+                      value={form.guests}
+                      onChange={(e) => updateField("guests", Number(e.target.value))}
+                      className="mt-2 w-full rounded-[var(--ui-radius-sm)] border border-[var(--sage-border)] bg-white/70 px-4 py-3 text-sm text-[var(--sage-text)] outline-none"
+                    >
+                      {[1, 2, 3, 4, 5, 6].map((count) => (
+                        <option key={count} value={count}>
+                          {count}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Room Type
+                    <Input disabled value={room.name} className="bg-[var(--sage-surface)]" />
+                  </label>
+                </div>
+              </Card>
 
-            <aside className="rounded-[8px] bg-white px-5 py-6 shadow-[0_20px_50px_rgba(0,0,0,0.08)] sm:px-8 sm:py-8">
-              <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(30px,4.4vw,34px)", color: "#1a1208" }}>Price Summary</h3>
-              <div className="mt-6 space-y-3 text-sm" style={{ color: "#4a3a28" }}>
-                <div className="flex justify-between"><span>Room rate</span><span>{formatNaira(summary.roomRate)}</span></div>
-                <div className="flex justify-between"><span>Nights</span><span>{summary.nights}</span></div>
-                <div className="flex justify-between"><span>Room total</span><span>{formatNaira(summary.roomTotal)}</span></div>
-                <div className="flex justify-between"><span>Service fee</span><span>{formatNaira(summary.serviceFee)}</span></div>
-                <div className="flex justify-between"><span>Taxes</span><span>{formatNaira(summary.taxes)}</span></div>
-              </div>
-              <div className="my-6 border-t border-[#e8e0d4]" />
-              <div className="flex items-end justify-between gap-4">
-                <span className="text-sm uppercase tracking-wide" style={{ color: "#a89070" }}>Total</span>
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(34px,4.8vw,40px)", color: "#1a1208" }}>{formatNaira(summary.total)}</p>
-              </div>
-              <button type="submit" className="mt-6 w-full rounded-full px-8 py-3 text-sm transition-all hover:opacity-90" style={{ background: GOLD, color: "#2a1f10", letterSpacing: "0.04em" }}>
-                Confirm Booking
-              </button>
-              <Link to="/rooms" className="mt-3 block w-full rounded-full border px-8 py-3 text-center text-sm" style={{ borderColor: GOLD, color: "#8B6914" }}>
-                Back to Rooms
-              </Link>
-            </aside>
-          </form>
-        </section>
+              <Card glass data-detail-reveal>
+                <h3 className="text-[clamp(30px,4.4vw,34px)] text-[var(--sage-text)]">Price Summary</h3>
+                <div className="mt-6 space-y-3 text-sm text-[var(--sage-muted)]">
+                  <div className="flex justify-between"><span>Room rate</span><span>{formatNaira(summary.roomRate)}</span></div>
+                  <div className="flex justify-between"><span>Nights</span><span>{summary.nights}</span></div>
+                  <div className="flex justify-between"><span>Room total</span><span>{formatNaira(summary.roomTotal)}</span></div>
+                  <div className="flex justify-between"><span>Service fee</span><span>{formatNaira(summary.serviceFee)}</span></div>
+                  <div className="flex justify-between"><span>Taxes</span><span>{formatNaira(summary.taxes)}</span></div>
+                </div>
+
+                <Divider className="my-6" />
+
+                <div className="flex items-end justify-between gap-4">
+                  <span className="text-sm uppercase tracking-wide text-[var(--sage-kicker)]">Total</span>
+                  <p className="text-[clamp(34px,4.8vw,40px)] text-[var(--sage-text)]">{formatNaira(summary.total)}</p>
+                </div>
+
+                <button
+                  type="submit"
+                  className="mt-6 w-full rounded-[var(--ui-radius-pill)] border border-[var(--sage-accent)] bg-[var(--sage-accent)] px-8 py-3 text-sm text-[var(--sage-text)] transition-colors hover:border-[var(--sage-accent-dark)] hover:bg-[var(--sage-accent-dark)] hover:text-white"
+                >
+                  Confirm Booking
+                </button>
+                <Link
+                  to="/rooms"
+                  className="mt-3 block w-full rounded-[var(--ui-radius-pill)] border border-[var(--sage-accent)] px-8 py-3 text-center text-sm text-[var(--sage-accent-dark)] transition-colors hover:bg-[var(--sage-surface)]"
+                >
+                  Back to Rooms
+                </Link>
+              </Card>
+            </form>
+          </Container>
+        </Section>
 
         <HotelFooter />
       </main>

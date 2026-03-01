@@ -9,10 +9,12 @@ import ViewBookingsPage from "./pages/ViewBookings";
 import BookingConfirmationPage from "./pages/BookingConfirmation";
 import OurHotelPage from "./pages/OurHotel";
 import ContactPage from "./pages/Contact";
+import Navbar from "./components/site/HotelNavbar";
 
 export default function App() {
   return (
     <BookingProvider>
+      <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/our-hotel" element={<OurHotelPage />} />

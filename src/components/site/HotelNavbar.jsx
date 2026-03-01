@@ -1,102 +1,238 @@
-import React, { forwardRef, useState } from "react";
-import { NavLink } from "react-router-dom";
+"use client";
 
-const navItems = [
-  { label: "Home", to: "/" },
-  { label: "Our Hotel", to: "/our-hotel" },
-  { label: "Rooms", to: "/rooms" },
-  { label: "Contact", to: "/contact" },
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link, NavLink } from "react-router-dom";
+import { FaXmark } from "react-icons/fa6";
+import { BiMenu } from "react-icons/bi";
+import gsap from "gsap";
+
+import { cn } from "../../../lib/utils";
+
+const links = [
+  { name: "Home", link: "/" },
+  { name: "Our Hotel", link: "/our-hotel" },
+  { name: "Rooms", link: "/rooms" },
+  { name: "Contact", link: "/contact" },
 ];
 
-const HotelNavbar = forwardRef(function HotelNavbar({ tone = "light" }, ref) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const isLight = tone === "light";
-  
+const Navbar = () => {
+  const [width, setWidth] = useState("100%");
+  const [navOpen, setNavOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  const navTextClass = isLight ? "text-white/90 hover:text-white" : "text-[#3a2a18] hover:text-[#1a1208]";
-  const brandClass = isLight ? "text-white" : "text-[#1a1208]";
-  const lineClass = isLight ? "bg-white" : "bg-[#3a2a18]";
-  const drawerClass = isLight ? "bg-black/80 border-white/20 text-white" : "bg-white border-[#e8e0d4] text-[#1a1208]";
+  const navRootRef = useRef(null);
+  const overlayRef = useRef(null);
+  const drawerRef = useRef(null);
+  const drawerCloseBtnRef = useRef(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      const newWidth = 100 - scrollPosition / 10;
+      setWidth(`${Math.max(newWidth, 84)}%`);
+      setIsScrolled(scrollPosition > 20);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = navOpen ? "hidden" : "";
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setNavOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [navOpen]);
+
+  useLayoutEffect(() => {
+    if (!navRootRef.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        navRootRef.current,
+        { y: -100, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.7,
+          ease: "power3.out",
+        },
+      );
+    }, navRootRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  useEffect(() => {
+    if (!overlayRef.current || !drawerRef.current) return;
+
+    const overlayEl = overlayRef.current;
+    const drawerEl = drawerRef.current;
+
+    if (navOpen) {
+      // ensure visible before animating
+      gsap.set([overlayEl, drawerEl], { clearProps: "display" });
+
+      gsap.fromTo(
+        overlayEl,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.2, ease: "power1.out" },
+      );
+
+      gsap.fromTo(
+        drawerEl,
+        { xPercent: 100, opacity: 0 },
+        { xPercent: 0, opacity: 1, duration: 0.45, ease: "power3.out" },
+      );
+
+      // focus close button for accessibility
+      drawerCloseBtnRef.current?.focus?.();
+    } else {
+      gsap.to(overlayEl, { opacity: 0, duration: 0.2, ease: "power1.in" });
+      gsap.to(drawerEl, {
+        xPercent: 100,
+        opacity: 0,
+        duration: 0.35,
+        ease: "power3.in",
+      });
+    }
+  }, [navOpen]);
 
   return (
-    <>
-      <nav
-        ref={ref}
-        className="absolute left-0 right-0 top-0 z-40 flex items-center justify-between px-4 py-5 sm:px-6 lg:px-12 lg:py-7"
+    <div ref={navRootRef} className="max-w-7xl mx-auto sticky top-0 z-99 py-5">
+      <div
+        style={{ width }}
+        className={cn(
+          "mx-auto max-w-3xl flex h-fit items-center justify-between rounded-full border px-5 py-3.5 backdrop-blur-md transition-all duration-300 md:px-6",
+          isScrolled
+            ? "border-neutral-300/25 bg-black/20 shadow-[0_8px_20px_rgba(0,0,0,0.15)]"
+            : "border-white/10 bg-black/10",
+        )}
       >
-        <NavLink to="/" className={`text-xl tracking-wide ${brandClass}`} style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-          <span className="font-light">HUMX</span>
-        </NavLink>
-
-        <div className="hidden items-center gap-10 md:flex">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.label}
-              to={item.to}
-              className={({ isActive }) =>
-                `${navTextClass} text-sm tracking-wide transition-colors duration-200 ${isActive ? (isLight ? "text-white" : "text-[#1a1208]") : ""}`
-              }
-              style={{ fontFamily: "'Jost', sans-serif", fontWeight: 400 }}
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setMenuOpen((open) => !open)}
-            className="group ml-2 flex flex-col gap-[5px] md:hidden"
-            aria-label="Toggle menu"
-            aria-expanded={menuOpen}
-          >
-            <span className={`block h-px w-6 transition-all duration-300 group-hover:w-8 ${lineClass} ${menuOpen ? "translate-y-[6px] rotate-45" : ""}`} />
-            <span className={`block h-px w-6 transition-all duration-300 group-hover:w-4 ${lineClass} ${menuOpen ? "-translate-y-[4px] -rotate-45" : ""}`} />
-          </button>
-        </div>
-      </nav>
-
-      <div className={`fixed inset-0 z-50 md:hidden ${menuOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
-        <button
-          type="button"
-          aria-label="Close menu"
-          onClick={() => setMenuOpen(false)}
-          className={`absolute inset-0 bg-black/35 transition-opacity duration-300 ${menuOpen ? "opacity-100" : "opacity-0"}`}
-        />
-        <aside
-          className={`absolute right-0 top-0 h-full w-[82%] max-w-[320px] border-l px-6 py-8 shadow-[0_20px_50px_rgba(0,0,0,0.24)] backdrop-blur-xl transition-transform duration-300 ${drawerClass} ${menuOpen ? "translate-x-0" : "translate-x-full"}`}
+        <Link
+          to="/"
+          className="flex items-center gap-2 focus-visible:outline-none"
         >
-          <div className="mb-8 flex items-center justify-between">
-            <p className="text-lg tracking-wide" style={{ fontFamily: "'Cormorant Garamond', serif" }}>HUMX</p>
-            <button type="button" onClick={() => setMenuOpen(false)} className="text-sm opacity-80">Close</button>
-          </div>
-          <div className="grid gap-4">
-            {navItems.map((item) => (
-              <NavLink
-                key={`mobile-${item.label}`}
-                to={item.to}
-                onClick={() => setMenuOpen(false)}
-                className={({ isActive }) =>
-                  `text-sm tracking-wide transition-colors ${isActive ? (isLight ? "text-white" : "text-[#1a1208]") : isLight ? "text-white/85 hover:text-white" : "text-[#3a2a18] hover:text-[#1a1208]"}`
-                }
-                style={{ fontFamily: "'Jost', sans-serif", fontWeight: 400 }}
-              >
-                {item.label}
-              </NavLink>
-            ))}
-            <NavLink
-              to="/rooms"
-              onClick={() => setMenuOpen(false)}
-              className={`mt-3 inline-flex w-fit rounded-full px-5 py-2.5 text-xs uppercase tracking-[0.16em] transition-colors ${isLight ? "bg-white text-[#1a1208] hover:bg-white/90" : "bg-[#1a1208] text-white hover:bg-[#2a1f10]"}`}
-            >
-              Book now
-            </NavLink>
-          </div>
-        </aside>
-      </div>
-    </>
-  );
-});
+          <p className="text-2xl sm:text-3xl ">HUMX</p>
+        </Link>
 
-export default HotelNavbar;
+        <div className="hidden lg:flex items-center gap-8">
+          <nav className="flex items-center gap-2" aria-label="Primary">
+            {links.map((link) => {
+              return (
+                <NavLink
+                  key={link.name}
+                  to={link.link}
+                  className={({ isActive }) =>
+                    cn(
+                      "rounded-full px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue/60",
+                      isActive
+                        ? "bg-white/10 text-white"
+                        : "text-white/80 hover:text-white hover:bg-white/5",
+                    )
+                  }
+                >
+                  {link.name}
+                </NavLink>
+              );
+            })}
+          </nav>
+
+          <Link
+            to="/get-started"
+            className="focus-visible:outline-none"
+          ></Link>
+        </div>
+
+        <button
+          onClick={() => setNavOpen((prev) => !prev)}
+          className="lg:hidden rounded-full p-2 text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue/60"
+          aria-expanded={navOpen}
+          aria-controls="mobile-nav"
+          aria-label={
+            navOpen ? "Close navigation menu" : "Open navigation menu"
+          }
+        >
+          {navOpen ? <FaXmark size={24} /> : <BiMenu size={24} />}
+        </button>
+      </div>
+
+      {/* Mobile overlay + drawer (animated with GSAP) */}
+      <div
+        ref={overlayRef}
+        className={cn(
+          "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden",
+          navOpen ? "pointer-events-auto" : "pointer-events-none",
+        )}
+        style={{ opacity: 0, display: navOpen ? "block" : "none" }}
+        onClick={() => setNavOpen(false)}
+        aria-hidden={!navOpen}
+      />
+
+      <aside
+        ref={drawerRef}
+        id="mobile-nav"
+        role="dialog"
+        aria-modal="true"
+        className={cn(
+          "fixed inset-y-0 right-0 z-50 w-full max-w-[360px] border-l border-white/10 bg-black/90 p-6 backdrop-blur-2xl lg:hidden",
+          navOpen ? "pointer-events-auto" : "pointer-events-none",
+        )}
+        style={{
+          transform: "translateX(100%)",
+          opacity: 0,
+          display: navOpen ? "block" : "none",
+        }}
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex justify-end">
+            <button
+              ref={drawerCloseBtnRef}
+              onClick={() => setNavOpen(false)}
+              className="rounded-full p-2 text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue/60"
+              aria-label="Close navigation menu"
+            >
+              <FaXmark size={24} />
+            </button>
+          </div>
+
+          <nav
+            className="mt-8 flex flex-col gap-2"
+            aria-label="Mobile navigation"
+          >
+            {links.map((link) => {
+              return (
+                <NavLink
+                  key={link.name}
+                  to={link.link}
+                  className={({ isActive }) =>
+                    cn(
+                      "rounded-xl px-4 py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue/60",
+                      isActive
+                        ? "bg-white/10 text-white"
+                        : "text-white/85 hover:bg-white/5 hover:text-white",
+                    )
+                  }
+                  onClick={() => setNavOpen(false)}
+                >
+                  {link.name}
+                </NavLink>
+              );
+            })}
+          </nav>
+
+          <div className="mt-auto pb-8">
+            <Link to="/get-started" onClick={() => setNavOpen(false)} />
+          </div>
+        </div>
+      </aside>
+    </div>
+  );
+};
+
+export default Navbar;

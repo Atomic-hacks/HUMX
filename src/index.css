@@ -1,9 +1,29 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap");
 @import "tailwindcss";
 @source "./**/*.{js,jsx}";
 
 :root {
   color-scheme: light;
+  --sage-bg: #d6e1d7;
+  --sage-surface: #eef4ee;
+  --sage-text: #16251c;
+  --sage-muted: #31473a;
+  --sage-kicker: #4f6858;
+  --sage-accent: #759080;
+  --sage-accent-dark: #4e6757;
+  --sage-border: #acc0b0;
+  --hero-overlay-top: rgba(0, 0, 0, 0.08);
+  --hero-overlay-mid: rgba(0, 0, 0, 0.38);
+  --hero-overlay-bottom: rgba(0, 0, 0, 0.62);
+  --ui-radius-sm: 12px;
+  --ui-radius-md: 18px;
+  --ui-radius-lg: 24px;
+  --ui-radius-pill: 999px;
+  --ui-border: 1px solid color-mix(in srgb, var(--sage-border) 75%, white 25%);
+  --ui-shadow-soft: 0 12px 30px rgba(18, 33, 24, 0.1);
+  --ui-shadow-strong: 0 22px 55px rgba(10, 18, 13, 0.24);
+  --glass-bg: color-mix(in srgb, white 42%, transparent);
+  --glass-border: 1px solid color-mix(in srgb, white 40%, transparent);
 }
 
 * {
@@ -22,17 +42,23 @@ html {
 
 body {
   margin: 0;
-  font-family: "Manrope", system-ui, -apple-system, sans-serif;
-  background: #f7f2ea;
-  color: #151515;
+  font-family: "Montserrat", "Manrope", system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  background: var(--sage-bg);
+  color: var(--sage-text);
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
+}
+
+a {
+  color: inherit;
 }
 
 h1,
 h2,
 h3 {
-  font-family: "Cormorant Garamond", Georgia, serif;
+  font-family: "Montserrat", "Manrope", system-ui, -apple-system, sans-serif;
+  font-weight: 700;
   letter-spacing: -0.01em;
 }
 
@@ -64,4 +90,34 @@ h3 {
   width: max-content;
   animation: facilityMarquee 34s linear infinite;
   will-change: transform;
+}
+
+.ui-container {
+  width: min(1180px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.ui-section {
+  padding-block: clamp(3.2rem, 7vw, 5.5rem);
+}
+
+.ui-card {
+  background: var(--sage-surface);
+  border: var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  box-shadow: var(--ui-shadow-soft);
+}
+
+.ui-glass {
+  background: var(--glass-bg);
+  border: var(--glass-border);
+  border-radius: var(--ui-radius-md);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--ui-shadow-soft);
+}
+
+.ui-divider {
+  height: 1px;
+  width: 100%;
+  background: color-mix(in srgb, var(--sage-border) 78%, transparent);
 }

@@ -1,7 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import HotelNavbar from "../components/site/HotelNavbar";
+
 import HotelFooter from "../components/site/HotelFooter";
+import {
+  animateSectionReveal,
+  animateStaggerGrid,
+  gsap,
+  prefersReducedMotion,
+} from "../../lib/animations/gsap";
 import {
   HomeActivities,
   HomeAmenities,
@@ -11,32 +17,6 @@ import {
   HomeWelcome,
 } from "../components/home/HomeSections";
 
-const fontLink = document.createElement("link");
-fontLink.href =
-  "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500&display=swap";
-fontLink.rel = "stylesheet";
-if (!document.head.querySelector('[href*="Cormorant"]'))
-  document.head.appendChild(fontLink);
-
-function loadGSAP() {
-  return new Promise((resolve) => {
-    if (window.gsap) return resolve(window.gsap);
-    const s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js";
-    s.onload = () => {
-      const s2 = document.createElement("script");
-      s2.src =
-        "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js";
-      s2.onload = () => {
-        window.gsap.registerPlugin(window.ScrollTrigger);
-        resolve(window.gsap);
-      };
-      document.head.appendChild(s2);
-    };
-    document.head.appendChild(s);
-  });
-}
-
 export default function HomePage() {
   const navigate = useNavigate();
   const navRef = useRef(null);
@@ -44,9 +24,10 @@ export default function HomePage() {
   const subRef = useRef(null);
   const btnRef = useRef(null);
   const circleRef = useRef(null);
+  const rootRef = useRef(null);
 
   useEffect(() => {
-    loadGSAP().then((gsap) => {
+    const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       tl.fromTo(
         navRef.current,
@@ -89,76 +70,35 @@ export default function HomePage() {
           "-=0.5",
         );
 
-      gsap.to(circleRef.current, {
-        y: -10,
-        duration: 2.5,
-        ease: "sine.inOut",
-        yoyo: true,
-        repeat: -1,
-        delay: 2,
-      });
+      if (!prefersReducedMotion()) {
+        gsap.to(circleRef.current, {
+          y: -10,
+          duration: 2.5,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+          delay: 2,
+        });
+      }
 
-      gsap.utils.toArray(".reveal-up").forEach((el) => {
-        gsap.fromTo(
-          el,
-          { y: 50, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.9,
-            ease: "power3.out",
-            scrollTrigger: { trigger: el, start: "top 85%" },
-          },
-        );
+      gsap.utils.toArray("[data-reveal]").forEach((el) => {
+        animateSectionReveal(el, { y: 28, duration: 0.78 });
       });
-      gsap.utils.toArray(".reveal-left").forEach((el) => {
-        gsap.fromTo(
-          el,
-          { x: -50, opacity: 0 },
-          {
-            x: 0,
-            opacity: 1,
-            duration: 0.9,
-            ease: "power3.out",
-            scrollTrigger: { trigger: el, start: "top 80%" },
-          },
-        );
+      gsap.utils.toArray("[data-stagger]").forEach((el) => {
+        animateStaggerGrid(el);
       });
-      gsap.utils.toArray(".reveal-right").forEach((el) => {
-        gsap.fromTo(
-          el,
-          { x: 50, opacity: 0 },
-          {
-            x: 0,
-            opacity: 1,
-            duration: 0.9,
-            ease: "power3.out",
-            scrollTrigger: { trigger: el, start: "top 80%" },
-          },
-        );
-      });
-      gsap.utils.toArray(".amenity-card").forEach((el, i) => {
-        gsap.fromTo(
-          el,
-          { y: 40, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.7,
-            ease: "power3.out",
-            delay: i * 0.1,
-            scrollTrigger: { trigger: el, start: "top 88%" },
-          },
-        );
-      });
-    });
+    }, rootRef);
+
+    return () => ctx.revert();
   }, []);
 
   return (
-    <div style={{ fontFamily: "'Jost', sans-serif", margin: 0, padding: 0 }}>
+    <div ref={rootRef}>
+      {/* Navbar — sits at very top */}
+
       {/* ── HERO (fixed behind scrolling content) ──────────────────────────── */}
       <section
-        className="fixed left-0 right-0 top-0 z-0 overflow-hidden"
+        className="fixed top-0 left-0 right-0 overflow-hidden"
         style={{ height: "100vh" }}
       >
         {/* Background image */}
@@ -173,12 +113,9 @@ export default function HomePage() {
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.08) 45%, rgba(0,0,0,0.38) 72%, rgba(0,0,0,0.62) 100%)",
+              "linear-gradient(to bottom, var(--hero-overlay-top) 0%, var(--hero-overlay-top) 45%, var(--hero-overlay-mid) 72%, var(--hero-overlay-bottom) 100%)",
           }}
         />
-
-        {/* Navbar — sits at very top */}
-        <HotelNavbar ref={navRef} tone="light" />
 
         {/* ── Hero title — lower-left, large serif, light weight ── */}
         <div
@@ -188,27 +125,21 @@ export default function HomePage() {
             maxWidth: 560,
           }}
         >
-          <h1
-            className="font-light leading-[1.12] text-white"
-            style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "clamp(36px, 6vw, 68px)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {[["Welcome", "to"], ["HUMX", "Hotel"], ["Lagos"]].map(
-              (line, li) => (
-                <div key={li} className="overflow-hidden">
-                  <div className="flex flex-wrap gap-[0.3em]">
-                    {line.map((word, wi) => (
-                      <span key={wi} className="hero-word inline-block">
-                        {word}
-                      </span>
-                    ))}
-                  </div>
+          <h1 className="font-light leading-[1.12] text-white text-[clamp(36px,6vw,68px)] tracking-[-0.01em]">
+            {[
+              ["Welcome", "to"],
+              ["HUMX", "Hotel"],
+            ].map((line, li) => (
+              <div key={li} className="overflow-hidden">
+                <div className="flex flex-wrap gap-[0.3em]">
+                  {line.map((word, wi) => (
+                    <span key={wi} className="hero-word inline-block">
+                      {word}
+                    </span>
+                  ))}
                 </div>
-              ),
-            )}
+              </div>
+            ))}
           </h1>
         </div>
 
@@ -218,7 +149,7 @@ export default function HomePage() {
           ref={circleRef}
           type="button"
           onClick={() => navigate("/rooms")}
-          className="absolute z-40 hidden items-center justify-center rounded-full transition-transform duration-300 hover:scale-105 lg:flex"
+          className="absolute z-40 hidden border-neutral-400/40 bg-white/20 backdrop-blur-md items-center justify-center rounded-full transition-transform duration-300 hover:scale-105 lg:flex"
           style={{
             width: 148,
             height: 148,
@@ -226,11 +157,9 @@ export default function HomePage() {
             top: "57%",
             right: "8%",
             transform: "translateY(-50%)",
-            background: "rgba(210,195,155,0.92)",
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 17,
+            fontSize: 20,
             fontWeight: 500,
-            color: "#2a2015",
+            color: "black",
             lineHeight: 1.3,
             boxShadow: "0 8px 40px rgba(0,0,0,0.22)",
             border: "none",
@@ -268,11 +197,15 @@ export default function HomePage() {
             ref={btnRef}
             type="button"
             onClick={() => navigate("/rooms")}
-            className="group flex items-center gap-4 rounded-full bg-white py-3 pl-7 pr-3 text-sm text-neutral-800 transition-colors hover:bg-neutral-100"
+            className="group flex items-center gap-4 rounded-full bg-white py-3 pl-7 pr-3 text-sm"
           >
             View Rooms
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900 text-white transition-colors group-hover:bg-neutral-700">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--sage-muted)] text-white transition-colors group">
+              <svg
+                className="w-3.5 h-3.5 group-hover:rotate-45 transition-transform duration-200"
+                viewBox="0 0 14 14"
+                fill="none"
+              >
                 <path
                   d="M2 12L12 2M12 2H4M12 2V10"
                   stroke="white"
@@ -287,7 +220,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Main content scrolls over fixed hero ───────────────────────────── */}
-      <main className="relative z-20 pt-[100vh]">
+      <main className="relative z-20 mt-[100vh]">
         <HomeWelcome />
         <HomeActivities />
         <HomeFacilities />
